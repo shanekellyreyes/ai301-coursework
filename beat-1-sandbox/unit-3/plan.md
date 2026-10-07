@@ -1,11 +1,20 @@
-Replace this file with your unit-3 plan: the same `plan.md` your
-plan-check run graded.
+# Plan — Issue #15
 
-Keep the deviations heading below, and fill it before you submit. It is
-graded on being answered, not on there being deviations to report.
+**Issue:** https://github.com/codepath/pathreview-ai301-fa26-s1/issues/15
+**Issue title:** Agent session state not cleared between reviews
+
+## Plan
+
+Cause: two separate stale-state mechanisms both survive across reviews on the same `Orchestrator` instance. First, `Orchestrator` holds one long-lived `ContextManager` instance; `_execute_tool()` checks that instance's cache before executing a tool, so a second review with input that hashes the same as a prior review's gets the cached result instead of a fresh execution. Second, `Orchestrator.run()` loads `session_state` from Redis via `self.session_store.get(profile_id)`, merges new results into whatever was already there, and writes the merged dict back — so any key from a prior review that the current review doesn't overwrite persists in Redis indefinitely, across reviews and even process restarts. Confirmed directly against `agent/orchestrator.py`: `repro_issue15.py` shows `tool.call_count` staying at 1 across two separate `run()` calls on the same orchestrator instance (the `ContextManager` half); the `session_store` merge-without-clear behavior is confirmed by reading `agent/memory/session_store.py` and the relevant lines in `orchestrator.py` directly, matching the issue's own wording: "empty that cache and delete the profile's saved session state."
+
+Change: clear both stale-state mechanisms at the start of every review. In: add a `reset()` method to `ContextManager` (`agent/memory/context_manager.py`) that clears `self.results` back to an empty dict; call `self.context_manager.reset()` at the top of `Orchestrator.run()`; also call `self.session_store.delete(profile_id)` at the same point, using the existing `SessionStore.delete()` method rather than writing new logic. Out: any change to `SessionStore`'s Redis connection handling, TTL behavior, or the `get`/`set` methods themselves — only the point where `run()` clears prior state changes. Also out: the API layer, the ingestion pipeline, and the frontend — none construct or call into `ContextManager` or `SessionStore` directly.
+
+Files: `agent/orchestrator.py` (add both reset calls at the top of `run()`), `agent/memory/context_manager.py` (add the `reset()` method), `tests/unit/test_orchestrator.py` (new file — none exists yet).
+
+Test plan: re-run `repro_issue15.py` for the `ContextManager` half — before the fix, review 2 prints the identical `{'call_number': 1, 'stars': 10}` as review 1, and `tool.execute()` is reported called only 1 time; after the fix, review 2 must print `{'call_number': 2, 'stars': 20}`, with `tool.execute()` called 2 times. For the `SessionStore` half, add a test that: runs `Orchestrator.run()` once with a given `profile_id`, confirms `session_store.get(profile_id)` returns non-empty data, then runs `run()` again with the same `profile_id` and different tool results, and confirms the second call's stored `session_state` does not contain any key from the first call that the second call didn't itself produce.
+
+Risk: `ContextManager`'s cache also memoizes repeated tool calls *within* a single review — clearing it only at the top of `run()`, not mid-run, preserves that. For `session_store.delete()`: need to confirm it's safe to call unconditionally, including when no prior session exists for that `profile_id` (Redis's `DEL` on a missing key is a no-op, so this is expected to be safe, but worth confirming against the actual `SessionStore.delete()` implementation rather than assuming).
 
 ## Deviations
 
-[What changed between the plan you posted and the change you built, and
-why. If nothing changed, say so in your own words - "nothing changed;
-the plan held" earns these points in full. Leaving this blank does not.]
+One minor deviation: the test file's `FakeRedis` stand-in (used to avoid a live Redis dependency in `test_stale_keys_from_a_prior_review_are_not_retained`) didn't satisfy `SessionStore`'s `redis.Redis` type hint, which the repo's pre-commit mypy hook caught. Added a `# type: ignore[arg-type]` on that one line rather than changing `SessionStore`'s production type hint, since the plan's `Out:` line already excluded changes to `SessionStore` itself. No other deviations — the diagnosis, scope, files, and test plan all matched what was implemented and verified.
