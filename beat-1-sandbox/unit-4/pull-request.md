@@ -2,60 +2,39 @@
 
 Path: `beat-1-sandbox/unit-4/pull-request.md`
 
-Record of the pull request you opened against the Path Review repo, and of the evaluation
-runs that produced `eval-run.txt`. This file is graded at the path above; a copy kept
-anywhere else in the repository is not read.
-
-Complete every labelled field below. Each is graded on its own; content placed under the wrong
-label is not graded.
-
----
-
 ## Your pull request
 
 **Pull request**
 
-[Link to the pull request you opened. It must be the pull request's own page on the Path
-Review repo, not your fork's branch page.]
+https://github.com/codepath/pathreview-ai301-fa26-s1/pull/202
 
 **Branch**
 
-[The name of the branch the pull request comes from, exactly as it appears in your fork.
-The naming shape is a type prefix, then the issue number, then a short description. **The
-issue number in the branch name must be the number of the issue the pull request fixes** —
-a name carrying any other number does not satisfy this field.]
+fix/15-orchestrator-session-cache
 
 ## Eval iterations
 
-Answer all four sections. Quote source text directly; paraphrase does not satisfy these
-fields.
-
 **Run history**
 
-[The agreement score of each run you did, in order. A single run is a complete answer if
-only one run occurred. **The last score in your list must match the agreement line in the
-`eval-run.txt` you committed** — that file is the record of your final run.]
+- Partial smoke run: `agreement: 2/3 scored items`
+- Partial smoke run after rubric revision: `agreement: 3/3 scored items`
+- First full run: `agreement: 15/20 scored items (bar: 18/20: below the bar)`
+- Final full run: `agreement: 18/20 scored items (bar: 18/20: PASS)`
 
 **Package analysis**
 
-[Pick one scored package (`pkg-01` through `pkg-20` — the four `calib-` packages are never
-scored). Name it by id, say what your rubric decided and what the gold label said, and
-explain why your rubric read it that way.]
+I analyzed `pkg-02`. The gold label was `accept`, and the final rubric also returned `accept`. The package included a clear before-and-after reproduction showing the issue behavior changed, along with relevant test evidence. The revised Tested behavior check correctly allowed a complete labeled before-and-after transcript while continuing to reject packages that only reported a generic test-suite success or tested only an unchanged control path.
 
 **Check rationale**
 
-[Quote one check from the `rubric.md` you uploaded to `tools/pr-precheck/`, exactly as it reads now.
-Then say why it reads that way — what you revised to get there, or what you rejected in
-favour of it.]
+The final rubric's Tested behavior check says:
+
+“Pass if the package contains a command/result transcript or test-run output that makes the issue behavior observable before and after the change. Labeled `before` and `after` results count when they form a clear, rerunnable transcript. A relevant targeted test command may support the result when its name or output clearly covers the changed behavior. Generic suite success alone, prose saying tests passed, or a test of only an unchanged control path is insufficient. An honest, evidenced inability to reproduce may pass when clearly disclosed.”
+
+I revised this check after the first smoke run incorrectly rejected `pkg-02`, a clear-accept package with valid before-and-after output. The revised wording recognizes observable transcripts as evidence without accepting unsupported claims or generic test-suite output.
 
 **Trade-offs**
 
-[Every check gives something up. Any one of these is a complete answer: a package whose
-result it changes, a canary you re-ran with `--only`, a case you accept it will miss, or a
-stated reason nothing changed elsewhere. "Nothing changed, and here is how I know" earns
-the point in full when the reason follows.]
+The revised evidence rule improved agreement on clear-accept packages such as `pkg-02`, `pkg-05`, `pkg-08`, and `pkg-16`, while preserving rejection of not-tested packages such as `pkg-04`, `pkg-07`, `pkg-10`, and `pkg-14`. The final run reached the required `18/20` agreement and passed the category floor. Two clear-accept packages, `pkg-11` and `pkg-13`, remained false negatives because the tool favored conservative evidence grading; I accepted that trade-off rather than weakening the rule enough to admit unsupported test claims.
 
----
-
-Related paths: `eval-run.txt` in this directory; your skill's files in
-`tools/pr-precheck/`.
+Related paths: `eval-run.txt` in this directory; the skill files are in `tools/pr-precheck/`.
