@@ -55,10 +55,9 @@ happened; these entries are the toolkit's own timeline.
 All four entries are graded. Keep every heading below, and fill each
 one in the week it belongs to.
 
-**Unit 5: [one line on the tool work]**
+**Unit 5: Built and tested the issue-scout**
 
-[2-4 sentences: what you built (the scout, your strategy), what broke
-or fell short, what changed because of it.]
+I installed the Unit 5 scout over my Unit 1 skill, carried forward my rubric and evidence guide, and wrote search queries and ranking filters based on my fit profile. The first scan returned 300 results, 298 after deduplication; 248 passed the filters, and the scout accepted all five it graded. The results skewed toward same-day issues created by repository owners or collaborators, so I added a creation-date cutoff and a 90-day update filter; I have not rerun the scan with those changes yet. I also directly graded five issues from the selection site: OpenImageIO #4720 was accepted, AIBrix #3100 was accepted with a caveat because it asks for testing feedback rather than a code change, and three others were rejected because of existing claims or PRs and/or weak maintainer responsiveness.
 
 **Unit 6: [one line on the tool work]**
 
