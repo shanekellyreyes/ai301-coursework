@@ -64,7 +64,7 @@ I installed the Unit 5 scout over my Unit 1 skill, carried forward my rubric and
 The voice guard first could not read my relative draft path, then its Claude check failed because my OAuth session had expired; after logging in again, it passed and allowed my claim and reproduction comments to post. I also posted the reproduction report even though the Unit 6 instructions say to keep it for the PR description; I’ll record that mistake honestly and keep future reproduction evidence in the PR. After reading Caro’s `CLAUDE.md` and `CONTRIBUTING.md` and doing a focused search-index orientation, I created a 30-line `CLAUDE.local.md` and excluded it from Git.
 **Unit 7: Installed ship-gate and configured the Caro manifest**
 
-I installed ship-gate and filled a local manifest with dependency installation, website tests, the SEO type-check, and the local-database website build. On my feature branch, all four checks passed, but the gate stopped because there were no committed changes against `main`; some unrelated project hooks also printed non-blocking missing-script errors. Since the generated index stays out of Git, I added generation to `predev` and `prestart`; `prebuild` already generated it, and I confirmed both setup hooks work.
+I installed ship-gate and configured a local manifest for dependency installation, website tests, the SEO type-check, and the local-database website build. On the first run, all four checks passed, but the gate stopped because the branch had no committed changes against `main`; unrelated project hooks also printed non-blocking missing-script errors. I added generation to `predev` and `prestart` because the generated index is ignored by Git; `prebuild` already generated it. After committing and pushing the fix, updating the plan and evidence, and correcting the PR draft and commit title, I reran the gate: all four checks and pr-precheck passed, and I opened PR #1759.
 **Unit 8: Installed the PR monitor and wrote its playbook**
 
 I installed the PR monitor and wrote rules for reviewer replies, nudges, and when to close a PR. The full merged-PR history search found only one eligible human-authored example, #1065, so my five-day nudge threshold is provisional rather than based on the requested five-PR sample. Running `monitor.py --state` on my feature branch resolved `wildcard/caro`, reported `NO PR YET`, and confirmed all four playbook sections are filled. It made no Claude call and drafted nothing; I need an open PR before the monitor can draft a move.
@@ -218,22 +218,22 @@ A direct Node import of `website/src/config/pages.ts` failed because it uses Ast
 
 ## Pull Request
 
-**PR Link:** Pending; no PR is open yet.
+**PR Link:** [PR #1759](https://github.com/wildcard/caro/pull/1759)
 
-**PR Description:** Local draft at `~/caro/pr_draft.md`; not posted.
+**PR Description:** The content of `~/caro/pr_draft.md` was posted unchanged.
 
 **Maintainer Feedback:**
 
-- 2026-11-09: None yet; no PR is open.
+- 2026-11-10: CLA check passed after I signed. Vercel deploy checks await KADOSH DEV Team authorization; no human maintainer review yet.
 
-**Status:** Not opened yet. The implementation is committed as `d9aa41e9` and pushed to `origin/feature/1564-lazy-load-search-index`.
+**Status:** Open. CLA passed; GitHub reports 9 successful checks, 6 Vercel authorization failures, and 2 skipped checks.
 
 **Toolkit**
 
 - Tool: Ship-gate and PR monitor.
-- What it produced: All four manifest checks passed. The ship-gate stopped because the feature branch had no committed changes against `main`. The PR monitor confirmed `NO PR YET` and that the playbook is ready.
-- Difficulties: The gate compares committed branch changes; when it ran, the implementation had not yet been committed. With no PR open, the monitor had no thread to read or move to draft.
-- What changed: I recorded the gate results, installed the monitor, and completed its playbook. The monitor draft remains pending an opened PR.
+- What it produced: The ship-gate passed all four manifest checks and pr-precheck. PR #1759 opened with the draft body unchanged. The CLA check passed after signing; six Vercel deploy checks await team authorization.
+- Difficulties: The generated JSON deletion initially obscured the review diff, so I added a path-specific `-diff` rule. The PR checks still need Vercel team authorization; GitHub did not list the website test workflow, though the local ship-gate ran it successfully.
+- What changed: I updated the plan and evidence, corrected the PR draft and commit title, reran the gate to PASS, opened PR #1759, and signed the CLA.
 
 ---
 
