@@ -59,22 +59,15 @@ one in the week it belongs to.
 
 I installed the Unit 5 scout over my Unit 1 skill, carried forward my rubric and evidence guide, and wrote search queries and ranking filters based on my fit profile. The first scan returned 300 results, 298 after deduplication; 248 passed the filters, and the scout accepted all five it graded. The results skewed toward same-day issues created by repository owners or collaborators, so I added a creation-date cutoff and a 90-day update filter; I have not rerun the scan with those changes yet. I also directly graded five issues from the selection site: OpenImageIO #4720 was accepted, AIBrix #3100 was accepted with a caveat because it asks for testing feedback rather than a code change, and three others were rejected because of existing claims or PRs and/or weak maintainer responsiveness.
 
-**Unit 6: [one line on the tool work]**
+**Unit 6: Installed the voice guard and wrote Caro repo memory**
 
-[2-4 sentences: the voice-guard, the repo-memory file. What broke or
-fell short, and what changed because of it. "Nothing broke" counts when
-it is true - say how you know.]
+The voice guard first could not read my relative draft path, then its Claude check failed because my OAuth session had expired; after logging in again, it passed and allowed my claim and reproduction comments to post. I also posted the reproduction report even though the Unit 6 instructions say to keep it for the PR description; I’ll record that mistake honestly and keep future reproduction evidence in the PR. After reading Caro’s `CLAUDE.md` and `CONTRIBUTING.md` and doing a focused search-index orientation, I created a 30-line `CLAUDE.local.md` and excluded it from Git.
+**Unit 7: Installed ship-gate and configured the Caro manifest**
 
-**Unit 7: [one line on the tool work]**
+I installed ship-gate and filled a local manifest with dependency installation, website tests, the SEO type-check, and the local-database website build. On my feature branch, all four checks passed, but the gate stopped because there were no committed changes against `main`; some unrelated project hooks also printed non-blocking missing-script errors. Since the generated index stays out of Git, I added generation to `predev` and `prestart`; `prebuild` already generated it, and I confirmed both setup hooks work.
+**Unit 8: Installed the PR monitor and wrote its playbook**
 
-[2-4 sentences: the ship-gate and your gate manifest. What it produced
-on your real branch, what fought you, what changed because of it.]
-
-**Unit 8: [one line on the tool work]**
-
-[2-4 sentences: the PR-monitor and your playbook. What it read, what it
-drafted, what you did with the draft.]
-
+I installed the PR monitor and wrote rules for reviewer replies, nudges, and when to close a PR. The full merged-PR history search found only one eligible human-authored example, #1065, so my five-day nudge threshold is provisional rather than based on the requested five-PR sample. Running `monitor.py --state` on my feature branch resolved `wildcard/caro`, reported `NO PR YET`, and confirmed all four playbook sections are filled. It made no Claude call and drafted nothing; I need an open PR before the monitor can draft a move.
 ---
 
 ## Why I Chose This Issue
@@ -104,26 +97,26 @@ and add the link the moment your claim lands.]
 
 **Problem Description**
 
-[In your own words, what is broken or missing?]
+Every page using OmniSearch includes the full search index in a `data-pages` attribute, even though the index is only needed for search.
 
 **Expected Behavior**
 
-[What should happen?]
+Pages should avoid downloading and parsing the search index until someone opens search. On the first open, OmniSearch should fetch the static JSON index and reuse it for the session.
 
 **Current Behavior**
 
-[What actually happens?]
+The generator writes the index to `website/src/config/search-index.json`. `OmniSearch.astro` imports it, serializes it into `data-pages`, and parses it when the component initializes. My built homepage had a 1,589,980-byte `data-pages` attribute. The `open()` handler only opens the overlay and renders results.
 
 **Affected Components**
 
-[Which parts of the codebase are involved?]
+`website/scripts/generate-search-index.mjs` generates the index; `website/src/components/OmniSearch.astro` embeds and reads it; `website/src/layouts/Layout.astro` and `website/src/layouts/LandingPage.astro` render OmniSearch. I found no `search-index.json` in `website/public`. `OmniMenu.astro` also contains an index attribute, but the active layouts do not import it.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: GitHub issue and terminal source inspection with `grep`, `git grep`, and `sed`.
+- What it produced: A trace from the generator to the rendered attribute and the eager client-side parse.
+- Difficulties: `git grep` also found `OmniMenu.astro`; checking the layouts showed it wasn’t in the active render path.
+- What changed: I scoped the investigation to `OmniSearch.astro`; no code has changed yet.
 
 ---
 
@@ -131,31 +124,30 @@ and add the link the moment your claim lands.]
 
 **Environment Setup**
 
-[What a stranger would need to stand this up: your operating system,
-the relevant versions (language, runtime, package manager, the project
-itself), and how you set the project up. Then the challenges you faced
-and how you solved them, or that none came up.]
+macOS 26.6.2; Node v22.23.1; npm 10.9.8; Caro 1.5.0 at baseline commit `aa1b0e61` in my fork. Installed dependencies with `npm ci --no-audit --no-fund`; it completed with deprecation warnings. The website build completed with warnings.
 
 **Steps to Reproduce**
 
-1. [Step 1]
-2. [Step 2]
-3. [Observed result]
+1. From the repository root, run `npm ci --no-audit --no-fund`.
+2. From the repository root, run `cd website && node scripts/extract-version.mjs && node scripts/generate-search-index.mjs && ASTRO_DATABASE_FILE="$(mktemp -t caro-build-db)" ASTRO_TELEMETRY_DISABLED=1 npx astro build`.
+3. From the repository root, measure `website/dist/client/index.html` and its `data-pages` attribute with the Python command below.
+
+   `python3 -c 'import pathlib,re; p=pathlib.Path("website/dist/client/index.html"); b=p.read_bytes(); m=re.search(rb"data-pages=\"([^\"]*)\"",b); print("HTML bytes:",len(b)); print("data-pages bytes:",len(m.group(1)) if m else "attribute not found")'`
+
+   **Observed result:** HTML bytes: 1724865; data-pages bytes: 1589980.
 
 **Reproduction Evidence**
 
-- **Commit showing reproduction:** [link to commit in your fork]
-- **Screenshots/logs:** [if applicable]
-- **My findings:** [what you discovered during reproduction; an
-  honest, evidenced cannot-reproduce that led you to re-pick or ask
-  the maintainer belongs here and costs you nothing]
+- **Commit showing reproduction:** [Baseline commit `aa1b0e61` in my fork](https://github.com/shanekellyreyes/caro/commit/aa1b0e61)
+- **Screenshots/logs:** Terminal output showed the Astro build completed and reported the byte counts above.
+- **My findings:** The baseline homepage contains a 1,589,980-byte `data-pages` attribute in a 1,724,865-byte HTML file, about 92% of the file. This reproduces the inline-index behavior. The local attribute measurement is 34,490 bytes higher than the issue’s reported 1,555,490 bytes; I have recorded my run’s actual values.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Terminal commands using npm, Astro, and Python for the reproduction and measurement; `repro-check` for grading the claim draft.
+- What it produced: A successful baseline build and the measured HTML and `data-pages` sizes.
+- Difficulties: The index-generation step changed tracked `website/src/config/search-index.json` before code changes.
+- What changed: I restored that generated file and moved the build check to the manifest’s excluded table with the reason recorded.
 
 ---
 
@@ -163,93 +155,85 @@ and how you solved them, or that none came up.]
 
 **Analysis**
 
-[Your analysis of the root cause: what is causing the issue, traced
-to the files and functions involved.]
+`website/scripts/generate-search-index.mjs` generated the full index at `website/src/config/search-index.json`. `OmniSearch.astro` imported that file, serialized the index into the `data-pages` attribute on every rendered page, and parsed it during client-side setup. The baseline homepage measurement showed that this attribute was 1,589,980 bytes.
 
 **Proposed Solution**
 
-[High-level description of your fix approach, and what you are
-deliberately NOT changing.]
+Generate the index as `website/public/search-index.json` and fetch it when OmniSearch first opens. Reuse the fetched index for later opens, and keep the compact `PAGES_INDEX` available when the request fails. Keep the index content and schema, search ranking and fuzzy matching, and `OmniMenu.astro` unchanged.
 
 **Implementation Plan**
 
-1. [Modify file X to do Y]
-2. [Add or change Z]
-3. [Update tests]
+1. Change `generate-search-index.mjs` to write the generated index to `website/public/search-index.json`.
+2. Remove the full index import and `data-pages` attribute from `OmniSearch.astro`; load and reuse the index when search opens, with `PAGES_INDEX` as the fallback.
+3. Add focused loader tests for deferred loading, reuse, and fallback behavior; verify the build output and search behavior.
 
-[Record deviations here as they happen: what changed mid-build and
-why. A recorded deviation is honest work; silent drift is not.]
+**Deviations**
+
+On 2026-11-09, I kept the generated public JSON out of Git by adding it to `website/.gitignore`. Because a fresh checkout will not contain this ignored generated file, I updated the website's `predev` and `prestart` scripts to generate it. `prebuild` already generated the index.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Terminal source inspection and Git commands; Claude Code for implementation and test writing.
+- What it produced: A trace from index generation through HTML embedding, plus the lazy loader, integration changes, and focused tests.
+- Difficulties: Astro's `import.meta.glob` meant Node could not import `pages.ts` directly for a quick fallback-size measurement. I used a temporary adaptation for that measurement; the browser check later confirmed fallback results still appeared when the request was blocked.
+- What changed: I moved the generated output to the public directory, ignored it in Git, added dev and start generation hooks, and covered the loader behavior with tests.
 
 ---
 
 ## Testing Strategy
 
-[What observable checks prove the fix: your reproduction steps re-run
-against the built change (before and after), and the repo's own test
-suite or checks with the outcome shown. "Tests pass" with nothing
-observable named is not a strategy.]
+I compared the built homepage before and after the change. On baseline commit `aa1b0e61`, `website/dist/client/index.html` was 1,724,865 bytes and its `data-pages` attribute was 1,589,980 bytes. After the change, I rebuilt the site and measured `website/dist/client/index.html` at 138,389 bytes; the `data-pages` attribute was absent. The build also produced `website/dist/client/search-index.json` at 1,174,299 bytes with 51 indexed pages. This measurement covers the homepage, not every page or locale.
+
+The post-change build completed using a local Astro database. The website test suite passed: 17 files and 342 tests. `npx tsc -p tsconfig.seo.json`, run from `website/`, returned without errors or diagnostic output.
+
+In Chrome DevTools, I confirmed there was no search-index request before opening OmniSearch, one successful request on first open, and no additional request after closing and reopening. When I blocked the request, fallback results still appeared. After removing the block, the request succeeded. Opening search from the mobile navigation also loaded the index. I also ran `npm run dev -- --help` and `npm start -- --help` from `website/`; both setup hooks generated the index and Astro exited after printing help. The local ship-gate reran all four manifest checks successfully, then stopped before precheck because the branch had no committed changes against `main`.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Terminal build and measurement commands, the website's Vitest suite, TypeScript, and Chrome DevTools.
+- What it produced: Before-and-after homepage measurements, 342 passing tests, a clean SEO type-check, a successful local-database build, and observed browser behavior.
+- Difficulties: The standard website build uses `--remote`, which needs Astro Studio access. I ran the build with a local database, following the repository workflow's local-build approach.
+- What changed: I used the local database build and verified the generated static index and lazy-loading behavior in the browser.
 
 ---
 
 ## Implementation Notes
 
-[A running log, added to as you work. Date each entry. What you
-built, decisions you made when you made them, wrong turns included.]
+**2026-11-09**
 
-**[Date]**
+I implemented the fix on `feature/1564-lazy-load-search-index`. The generator now writes the index to `website/public/search-index.json`; OmniSearch fetches it on first open and reuses it. The loader prepares the compact `PAGES_INDEX` for the initial display and fallback. I added tests for deferred loading, reuse, and fallback. The generated public JSON is ignored by Git, and the website's `predev` and `prestart` scripts generate it on a fresh checkout.
 
-[Entry]
+**2026-11-09**
 
-**[Date]**
-
-[Entry]
+A direct Node import of `website/src/config/pages.ts` failed because it uses Astro's `import.meta.glob`, which Node does not provide. I used a temporary adaptation to estimate the compact fallback, then verified fallback results in the browser by blocking the index request. During baseline reproduction, index generation also changed the tracked `website/src/config/search-index.json`; I restored it, then changed the generator to write the ignored public file.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Claude Code for implementation and test writing; Terminal for builds, tests, measurements, and Git; Chrome DevTools for browser checks.
+- What it produced: A lazy-loading search index, focused tests, an ignored generated asset, and measured build and browser evidence.
+- Difficulties: Astro-specific `import.meta.glob` prevented importing `pages.ts` directly in Node; generated index output also needed to stay out of the tracked source tree.
+- What changed: I measured the fallback through a temporary adaptation, moved generated output to `website/public/`, added lifecycle generation for dev and start, and restored the tracked generated file before removing it from the implementation.
 
 ---
 
 ## Pull Request
 
-**PR Link:** [GitHub PR URL when opened]
+**PR Link:** Pending; no PR is open yet.
 
-**PR Description:** [what the PR says; much of the content above
-adapts into it]
+**PR Description:** Local draft at `~/caro/pr_draft.md`; not posted.
 
 **Maintainer Feedback:**
 
-- [Date]: [feedback received, or "none yet"; silence is a normal
-  state and costs you nothing]
-- [Date]: [how you addressed it]
+- 2026-11-09: None yet; no PR is open.
 
-**Status:** [Awaiting review / Iterating / Merged / Closed. The
-status is a fact you record, never a grade: the PR is graded as
-opened.]
+**Status:** Not opened yet. The implementation is committed as `d9aa41e9` and pushed to `origin/feature/1564-lazy-load-search-index`.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Ship-gate and PR monitor.
+- What it produced: All four manifest checks passed. The ship-gate stopped because the feature branch had no committed changes against `main`. The PR monitor confirmed `NO PR YET` and that the playbook is ready.
+- Difficulties: The gate compares committed branch changes; when it ran, the implementation had not yet been committed. With no PR open, the monitor had no thread to read or move to draft.
+- What changed: I recorded the gate results, installed the monitor, and completed its playbook. The monitor draft remains pending an opened PR.
 
 ---
 
