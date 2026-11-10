@@ -1,4 +1,4 @@
-# Contribution: [Issue Title]
+# Contribution: perf(website): OmniSearch inlines a 1.55 MB search index into every page
 
 Path: `beat-2-contribution/contribution-story.md`
 
@@ -8,11 +8,10 @@ format criteria grade exactly that. Your course repo link is the whole submissio
 files and no evidence uploads are part of Assignment 5.
 
 **Contribution Number:** [1]
-**Student:** [Student name]
-**GitHub Username:** [your GitHub username, exactly as it appears on your profile - no @, no
-profile URL. Your comments upstream are identified by this name.]
-**Issue:** [GitHub issue link]
-**Pull Request:** [GitHub PR link, once opened]
+**Student:** Shane Kelly Reyes
+**GitHub Username:** shanekellyreyes
+**Issue:** https://github.com/wildcard/caro/issues/1564
+**Pull Request:** https://github.com/wildcard/caro/pull/1759
 
 One repository, built across units 5 to 8, telling the whole story of your real
 contribution. Fill it as you work, not at the end — the sections below ask for evidence that
@@ -62,34 +61,31 @@ I installed the Unit 5 scout over my Unit 1 skill, carried forward my rubric and
 **Unit 6: Installed the voice guard and wrote Caro repo memory**
 
 The voice guard first could not read my relative draft path, then its Claude check failed because my OAuth session had expired; after logging in again, it passed and allowed my claim and reproduction comments to post. I also posted the reproduction report even though the Unit 6 instructions say to keep it for the PR description; I’ll record that mistake honestly and keep future reproduction evidence in the PR. After reading Caro’s `CLAUDE.md` and `CONTRIBUTING.md` and doing a focused search-index orientation, I created a 30-line `CLAUDE.local.md` and excluded it from Git.
+
 **Unit 7: Installed ship-gate and configured the Caro manifest**
 
 I installed ship-gate and configured a local manifest for dependency installation, website tests, the SEO type-check, and the local-database website build. On the first run, all four checks passed, but the gate stopped because the branch had no committed changes against `main`; unrelated project hooks also printed non-blocking missing-script errors. I added generation to `predev` and `prestart` because the generated index is ignored by Git; `prebuild` already generated it. After committing and pushing the fix, updating the plan and evidence, and correcting the PR draft and commit title, I reran the gate: all four checks and pr-precheck passed, and I opened PR #1759.
-**Unit 8: Installed the PR monitor and wrote its playbook**
 
-I installed the PR monitor and wrote rules for reviewer replies, nudges, and when to close a PR. The full merged-PR history search found only one eligible human-authored example, #1065, so my five-day nudge threshold is provisional rather than based on the requested five-PR sample. Running `monitor.py --state` on my feature branch resolved `wildcard/caro`, reported `NO PR YET`, and confirmed all four playbook sections are filled. It made no Claude call and drafted nothing; I need an open PR before the monitor can draft a move.
+**Unit 8: Used the PR monitor and corrected its review-response draft**
+
+My playbook covers reviewer replies, staleness thresholds, nudge etiquette, and walk-away criteria; its five-day nudge threshold remains provisional because my merged-PR search found only one eligible human-authored example, #1065, rather than the requested five. On 2026-11-10, the full monitor run detected Cubic's third review round and drafted a response to three fallback-description comments. The draft incorrectly described the existing metadata test as only checking routes and assumed the docs pages exported `searchMeta`, so I checked the actual tests, page descriptions, and README before using it. I pushed the three description fixes in `81854cee`, replaced the monitor's draft with a corrected reply, and [posted it through Claude Code](https://github.com/wildcard/caro/pull/1759#issuecomment-6766175310).
+
 ---
 
 ## Why I Chose This Issue
 
-[1-2 paragraphs in your own words: how you searched, what your scan
-surfaced, what your scout's verdict said, why this issue fits your
-profile, and what you hope to learn. If your scout's verdict on it
-was reject and you chose it anyway, say so here and say why; choosing
-against your own tool silently is what loses points. Close with an
-honest read of the tool itself: where the scout fell short on a real
-wild search and what you changed or would change, or what convinced
-you it held up. **Record the link to your claim comment in this section too.**
-Not claimed yet? Write `claim pending` and today's date where the link goes,
-and add the link the moment your claim lands.]
+I found Caro #1564 by using an AI agent to scan the issues page and look for issues suitable for a first contribution. I chose it because it looked recent, appeared to need triage, and described a specific performance problem I could investigate. The oversized search index gave me a concrete starting point: trace how the index reached the browser, build the website, and measure the resulting HTML. My learning goal was to understand generated assets, lazy loading, and fallback behavior through a real contribution.
+
+My recollection is that the scout accepted this issue, but I have not verified the saved verdict, so I am recording that as a recollection rather than a confirmed result. The earlier broad scout scan accepted all five issues it graded and skewed toward same-day issues opened by owners or collaborators, which showed me that its results still needed manual review. I added a creation-date cutoff and a 90-day update filter, but I have not rerun that scan with those changes. The agent helped me find candidates; checking the issue and reproducing the problem gave me stronger evidence for proceeding.
+
+**Claim comment:** [My claim on Caro #1564](https://github.com/wildcard/caro/issues/1564#issuecomment-6717799627)
 
 **Toolkit**
 
-- Tool: issue-scout (your scout: your search strategy, your rubric),
-  and how you used it
-- What it produced: [the scan and its verdict on this issue, described]
-- Difficulties: [where it fell short, or "none met" if none did]
-- What changed: [what you patched or would update, or "nothing"]
+- Tool: An AI agent to scan the issues page and check first-contribution fit, alongside my Unit 5 issue-scout for evaluating candidates.
+- What it produced: Caro #1564 as a contribution candidate; I then checked the issue and posted a claim under `shanekellyreyes`.
+- Difficulties: The broad scout results favored very recent owner- or collaborator-created issues, and I have not verified the saved verdict for this specific issue.
+- What changed: I added a creation-date cutoff and a 90-day update filter, and kept the distinction between my remembered scout verdict and the evidence I verified directly.
 
 ---
 
@@ -105,7 +101,7 @@ Pages should avoid downloading and parsing the search index until someone opens 
 
 **Current Behavior**
 
-The generator writes the index to `website/src/config/search-index.json`. `OmniSearch.astro` imports it, serializes it into `data-pages`, and parses it when the component initializes. My built homepage had a 1,589,980-byte `data-pages` attribute. The `open()` handler only opens the overlay and renders results.
+At baseline commit `aa1b0e61`, the generator wrote the index to `website/src/config/search-index.json`. `OmniSearch.astro` imported it, serialized it into `data-pages`, and parsed it when the component initialized. My built homepage had a 1,589,980-byte `data-pages` attribute. At baseline, the `open()` handler only opened the overlay and rendered results.
 
 **Affected Components**
 
@@ -116,7 +112,7 @@ The generator writes the index to `website/src/config/search-index.json`. `OmniS
 - Tool: GitHub issue and terminal source inspection with `grep`, `git grep`, and `sed`.
 - What it produced: A trace from the generator to the rendered attribute and the eager client-side parse.
 - Difficulties: `git grep` also found `OmniMenu.astro`; checking the layouts showed it wasn’t in the active render path.
-- What changed: I scoped the investigation to `OmniSearch.astro`; no code has changed yet.
+- What changed: I scoped the investigation to `OmniSearch.astro`; no implementation changes had been made at that investigation stage.
 
 ---
 
@@ -147,7 +143,7 @@ macOS 26.6.2; Node v22.23.1; npm 10.9.8; Caro 1.5.0 at baseline commit `aa1b0e61
 - Tool: Terminal commands using npm, Astro, and Python for the reproduction and measurement; `repro-check` for grading the claim draft.
 - What it produced: A successful baseline build and the measured HTML and `data-pages` sizes.
 - Difficulties: The index-generation step changed tracked `website/src/config/search-index.json` before code changes.
-- What changed: I restored that generated file and moved the build check to the manifest’s excluded table with the reason recorded.
+- What changed: During baseline reproduction, I restored the generated file and recorded why the build check was excluded at that stage. The final manifest includes the local-database build after the generated output moved out of tracked source.
 
 ---
 
@@ -155,45 +151,55 @@ macOS 26.6.2; Node v22.23.1; npm 10.9.8; Caro 1.5.0 at baseline commit `aa1b0e61
 
 **Analysis**
 
-`website/scripts/generate-search-index.mjs` generated the full index at `website/src/config/search-index.json`. `OmniSearch.astro` imported that file, serialized the index into the `data-pages` attribute on every rendered page, and parsed it during client-side setup. The baseline homepage measurement showed that this attribute was 1,589,980 bytes.
+At baseline commit `aa1b0e61`, `generateSearchIndex()` in `website/scripts/generate-search-index.mjs` wrote the full index into the source configuration directory. `website/src/components/OmniSearch.astro` imported it, serialized it into `data-pages`, and parsed it during initialization. The measured attribute occupied 1,589,980 bytes of the homepage's 1,724,865-byte HTML file.
 
 **Proposed Solution**
 
-Generate the index as `website/public/search-index.json` and fetch it when OmniSearch first opens. Reuse the fetched index for later opens, and keep the compact `PAGES_INDEX` available when the request fails. Keep the index content and schema, search ranking and fuzzy matching, and `OmniMenu.astro` unchanged.
+Generate a public JSON asset and fetch it when search opens. Reuse a successful result and retain a compact, client-safe fallback when loading fails. Preserve the full index's content and schema, search ranking, fuzzy matching, and `OmniMenu.astro`.
 
 **Implementation Plan**
 
-1. Change `generate-search-index.mjs` to write the generated index to `website/public/search-index.json`.
-2. Remove the full index import and `data-pages` attribute from `OmniSearch.astro`; load and reuse the index when search opens, with `PAGES_INDEX` as the fallback.
-3. Add focused loader tests for deferred loading, reuse, and fallback behavior; verify the build output and search behavior.
+1. Change `generateSearchIndex()` in `website/scripts/generate-search-index.mjs` to write `website/public/search-index.json`.
+2. In `website/src/components/OmniSearch.astro`, remove the full-index import and `data-pages` attribute. Use `loadIndex()` from `open()` and the mobile trigger's `omni-search:load` event.
+3. Put preparation, shared in-flight loading, successful-result caching, retry, and fallback behavior in `createSearchIndexLoader()` and `prepareSearchPages()` in `website/src/lib/search-index-loader.ts`.
+4. Export the client-safe `STATIC_PAGES_INDEX` from `website/src/config/pages-static.ts`. Keep the eager page metadata glob and the `buildPageEntries()`/`getEntry()` merge in `website/src/config/pages.ts`.
+5. Ignore the public generated JSON in `website/.gitignore`, remove tracked `website/src/config/search-index.json`, and generate the public asset through the website package's development and build hooks.
+6. Cover loader behavior, client wiring, and metadata consistency in `website/src/lib/search-index-loader.test.ts`; compare fallback paths with the current static page routes.
+7. Run the manifest checks, inspect the build output, and check first-open loading, reuse, and fallback in the browser.
 
 **Deviations**
 
-On 2026-11-09, I kept the generated public JSON out of Git by adding it to `website/.gitignore`. Because a fresh checkout will not contain this ignored generated file, I updated the website's `predev` and `prestart` scripts to generate it. `prebuild` already generated the index.
+The implementation needed a separate loader module and client-safe fallback module so browser code would not import the eager Astro page glob. I added generation hooks for `predev`, `prestart`, and `preastro`; `prebuild` already generated the index. I also added a path-specific `.gitattributes` `-diff` rule so the large generated JSON deletion would not obscure the source changes.
+
+Review feedback led me to expand the fallback to all 51 current static routes, synchronize entries with seven page `searchMeta` exports, and assert both ends of the mobile loading event. A later review caught poor descriptions copied from generated snippets. I replaced the security and Kavana descriptions with their page metadata and checked the supported shell wording against the README.
 
 **Toolkit**
 
-- Tool: Terminal source inspection and Git commands; Claude Code for implementation and test writing.
-- What it produced: A trace from index generation through HTML embedding, plus the lazy loader, integration changes, and focused tests.
-- Difficulties: Astro's `import.meta.glob` meant Node could not import `pages.ts` directly for a quick fallback-size measurement. I used a temporary adaptation for that measurement; the browser check later confirmed fallback results still appeared when the request was blocked.
-- What changed: I moved the generated output to the public directory, ignored it in Git, added dev and start generation hooks, and covered the loader behavior with tests.
+- Tool: Terminal source inspection and Git, with Claude Code and ChatGPT assisting implementation, debugging, and test changes.
+- What it produced: A traced cause, a public generated asset, a reusable lazy loader, a client-safe fallback, and focused tests.
+- Difficulties: The eager Astro page glob was unsuitable for the browser fallback, and generated text snippets were not always useful descriptions.
+- What changed: I separated browser-safe data from the page glob, expanded route coverage, and checked questionable descriptions against their actual page sources.
 
 ---
 
 ## Testing Strategy
 
-I compared the built homepage before and after the change. On baseline commit `aa1b0e61`, `website/dist/client/index.html` was 1,724,865 bytes and its `data-pages` attribute was 1,589,980 bytes. After the change, I rebuilt the site and measured `website/dist/client/index.html` at 138,389 bytes; the `data-pages` attribute was absent. The build also produced `website/dist/client/search-index.json` at 1,174,299 bytes with 51 indexed pages. This measurement covers the homepage, not every page or locale.
+The first observable check was the built homepage payload. In the recorded before-and-after run, baseline commit `aa1b0e61` produced 1,724,865 bytes of HTML with a 1,589,980-byte `data-pages` attribute. After the lazy-loading change, the measured homepage was 138,389 bytes and the attribute was absent. The generated `website/dist/client/search-index.json` contained 51 pages and measured 1,174,299 bytes. These measurements cover the homepage, not every page or locale.
 
-The post-change build completed using a local Astro database. The website test suite passed: 17 files and 342 tests. `npx tsc -p tsconfig.seo.json`, run from `website/`, returned without errors or diagnostic output.
+The second observable check was browser request behavior. In Chrome DevTools, no index request appeared before search opened; the first open requested the index, and closing and reopening did not add another request. Blocking the request still produced fallback results, and removing the block allowed a retry. Opening search through mobile navigation also loaded the index.
 
-In Chrome DevTools, I confirmed there was no search-index request before opening OmniSearch, one successful request on first open, and no additional request after closing and reopening. When I blocked the request, fallback results still appeared. After removing the block, the request succeeded. Opening search from the mobile navigation also loaded the index. I also ran `npm run dev -- --help` and `npm start -- --help` from `website/`; both setup hooks generated the index and Astro exited after printing help. The local ship-gate reran all four manifest checks successfully, then stopped before precheck because the branch had no committed changes against `main`.
+The latest full website suite passed 17 files and 343 tests. The focused loader file passed 10 tests, covering deferred loading, reuse, concurrency, fallback, retry after an empty response, preparation, and source wiring. The mobile assertions check the event dispatch and listener in source; they do not simulate a browser click. The metadata test compares fallback titles, descriptions, and keywords with seven page `searchMeta` exports. A separate route comparison found 51 static page routes and 51 fallback entries, with no missing or extra routes.
+
+The SEO TypeScript check returned without diagnostics. Ship-gate passed all four manifest checks and PR precheck on the final description-fix commit, `81854cee`, including dependency installation, the website tests, the SEO type-check, and the local-database website build. Earlier gate attempts exposed uncommitted branch changes and incomplete draft evidence; I corrected those before the successful runs.
+
+I used a local Astro database because the standard remote build requires Astro Studio access. Captured build output included a Vite dynamic-import warning and localized route-priority warnings. Without a baseline warning log, I cannot say whether those warnings were new.
 
 **Toolkit**
 
-- Tool: Terminal build and measurement commands, the website's Vitest suite, TypeScript, and Chrome DevTools.
-- What it produced: Before-and-after homepage measurements, 342 passing tests, a clean SEO type-check, a successful local-database build, and observed browser behavior.
-- Difficulties: The standard website build uses `--remote`, which needs Astro Studio access. I ran the build with a local database, following the repository workflow's local-build approach.
-- What changed: I used the local database build and verified the generated static index and lazy-loading behavior in the browser.
+- Tool: npm, Astro, Python measurements, Vitest, TypeScript, Chrome DevTools, and ship-gate.
+- What it produced: Before-and-after payload measurements, observed request behavior, 343 passing tests, matching route sets, a clean SEO type-check, and a passing gate.
+- Difficulties: The remote build required service access, and the precheck evaluated committed branch contents while my updated files were initially uncommitted.
+- What changed: I used the local database build, committed the reviewed changes before rerunning precheck, and kept measured results separate from unverified claims.
 
 ---
 
@@ -207,12 +213,22 @@ I implemented the fix on `feature/1564-lazy-load-search-index`. The generator no
 
 A direct Node import of `website/src/config/pages.ts` failed because it uses Astro's `import.meta.glob`, which Node does not provide. I used a temporary adaptation to estimate the compact fallback, then verified fallback results in the browser by blocking the index request. During baseline reproduction, index generation also changed the tracked `website/src/config/search-index.json`; I restored it, then changed the generator to write the ignored public file.
 
+**2026-11-10 — Review-feedback changes**
+
+I pushed `5953f4eb` to separate the client-safe fallback from the eager page glob and address the first review-feedback changes. In `99a75a54`, I expanded the fallback to all 51 current static routes, aligned the affected `searchMeta` values, and added mobile event assertions and a metadata consistency test. A route comparison found no missing or extra paths.
+
+**2026-11-10 — Description fixes and reviewer reply**
+
+Cubic then identified a truncated security description, a section label used as Kavana's summary, and incomplete shell-support wording. I checked the actual page descriptions and README, corrected the three strings, and pushed `81854cee`. Ship-gate passed all four manifest checks and PR precheck on that commit.
+
+The PR monitor drafted a response, but it incorrectly described the existing test and assumed metadata exports that were not present. I replaced those claims with the verified changes and checks, then [posted the corrected reply through Claude Code](https://github.com/wildcard/caro/pull/1759#issuecomment-6766175310).
+
 **Toolkit**
 
-- Tool: Claude Code for implementation and test writing; Terminal for builds, tests, measurements, and Git; Chrome DevTools for browser checks.
-- What it produced: A lazy-loading search index, focused tests, an ignored generated asset, and measured build and browser evidence.
-- Difficulties: Astro-specific `import.meta.glob` prevented importing `pages.ts` directly in Node; generated index output also needed to stay out of the tracked source tree.
-- What changed: I measured the fallback through a temporary adaptation, moved generated output to `website/public/`, added lifecycle generation for dev and start, and restored the tracked generated file before removing it from the implementation.
+- Tool: Claude Code and ChatGPT for implementation assistance and draft review; Terminal for source inspection, tests, builds, measurements, and Git; Chrome DevTools for browser checks.
+- What it produced: The lazy-loading fix, review-feedback commits, 343 passing tests, a passing gate, and a posted reviewer response.
+- Difficulties: Astro-specific imports complicated the fallback, generated snippets supplied poor descriptions, and the monitor proposed claims that did not match the code.
+- What changed: I separated client-safe data, verified descriptions against their source pages, and replaced the monitor's unsupported claims before posting.
 
 ---
 
@@ -220,13 +236,18 @@ A direct Node import of `website/src/config/pages.ts` failed because it uses Ast
 
 **PR Link:** [PR #1759](https://github.com/wildcard/caro/pull/1759)
 
-**PR Description:** The content of `~/caro/pr_draft.md` was posted unchanged.
+**PR Description:** The description names issue #1564, explains the lazy-loading change and compact fallback, and records reproduction measurements, browser checks, test results, and limitations. I updated it after the review-feedback changes; it now records 343 passing tests.
 
 **Maintainer Feedback:**
 
-- 2026-11-10: CLA check passed after I signed. Vercel deploy checks await KADOSH DEV Team authorization; no human maintainer review yet.
+- **2026-11-10 — Feedback received:** Cubic, an automated reviewer, flagged missing mobile-trigger assertions, differences between fallback entries and page `searchMeta`, and missing fallback routes.
+- **2026-11-10 — My response:** I pushed `99a75a54`, adding the mobile event assertions, synchronizing the affected metadata, and expanding the fallback to all 51 current static routes. The route comparison found no missing or extra routes, the full suite passed 343 tests, and ship-gate passed.
+- **2026-11-10 — Further feedback received:** Cubic flagged a truncated `/docs/security` description, a section label used as the `/docs/kavana` summary, and `/docs` wording that omitted supported Windows shells.
+- **2026-11-10 — My response:** I checked the page descriptions and README, pushed the three corrections in `81854cee`, and reran ship-gate successfully. I then [posted a reply explaining the fixes and checks](https://github.com/wildcard/caro/pull/1759#issuecomment-6766175310).
+- **2026-11-10 — Other status:** No human maintainer review was recorded in the checks I inspected. The CLA passed; the six failing Vercel checks reported team authorization requirements.
 
-**Status:** Open. CLA passed; GitHub reports 9 successful checks, 6 Vercel authorization failures, and 2 skipped checks.
+**Status:** Awaiting review
+
 
 **Toolkit**
 
@@ -241,25 +262,25 @@ A direct Node import of `website/src/config/pages.ts` failed because it uses Ast
 
 **Technical Skills Gained**
 
-[What you learned technically, named concretely.]
+I learned to trace a generated asset from its build script into rendered HTML and browser initialization. Moving the search index to a public file changed when the browser downloaded it, while the loader handled reuse, concurrent requests, retries, and fallback results. I also learned why a browser-safe fallback needs to stay separate from an eager Astro page glob.
 
 **Challenges Overcome**
 
-[What was hard and how you solved it; point at the real events, the
-Toolkit blocks above are full of them.]
+The standard remote build required Astro Studio access, so I used a local database build. Generated output also changed a tracked file during reproduction, which required care to keep the baseline and implementation changes separate. Later, review exposed missing fallback routes and poor generated descriptions; I checked route coverage and page metadata instead of assuming the generated snippets were suitable.
+
+The gate and monitor needed review too. The gate caught a mismatch between the PR draft and uncommitted branch contents. The monitor drafted statements about tests and metadata exports that were inaccurate, so I checked the source before posting a corrected reply.
 
 **What I'd Do Differently Next Time**
 
-[Reflection on your process.]
+I would save the baseline build warnings and the scout's exact verdict for the selected issue, so I could compare results without relying on memory. I would check route coverage and fallback metadata earlier, before asking for review. I would also validate each concrete claim in an AI-generated reply against the code or terminal output and document a limited maintainer-history sample before treating a nudge threshold as established.
 
 ---
 
 ## Resources Used
 
-[What actually helped, not a reading list. List things this story
-already shows you using: the doc you followed to set the environment
-up, the thread that explained the bug, the person who answered you.
-One real entry beats ten plausible ones.]
-
-- [Link to documentation that helped]
-- [Discussion, issue, or post that helped]
+- [Caro issue #1564](https://github.com/wildcard/caro/issues/1564): supplied the reported inline-index problem and the suggested direction of serving a static JSON asset.
+- [Caro's CLAUDE.md](https://github.com/wildcard/caro/blob/main/CLAUDE.md) and [CONTRIBUTING.md](https://github.com/wildcard/caro/blob/main/CONTRIBUTING.md): informed my repository orientation, local repo memory, and contribution workflow.
+- [Caro's README at the description-fix commit](https://github.com/wildcard/caro/blob/81854cee/README.md): confirmed the implemented target shells, including PowerShell and cmd.
+- [Security page source](https://github.com/wildcard/caro/blob/81854cee/website/src/pages/docs/security.astro) and [Kavana page source](https://github.com/wildcard/caro/blob/81854cee/website/src/pages/docs/kavana.astro): supplied the actual descriptions used to correct the fallback entries.
+- [CodePath Unit 8 materials](https://github.com/codepath/ai301-unit8-starter) and the assignment instructions: explained installing the PR monitor, writing its playbook, reviewing its draft, and posting through Claude Code.
+- [PR #1759's review thread](https://github.com/wildcard/caro/pull/1759): identified concrete fallback, metadata, and mobile-wiring problems that I checked and addressed.
